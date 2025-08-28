@@ -1,156 +1,398 @@
-
 <!doctype html>
 <html lang="es">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Admin — Seguimiento</title>
+<title>Admin — Seguimiento (estilo moderno)</title>
 <style>
-  :root{ --bg:#0f172a; --panel:#111827; --muted:#94a3b8; --text:#e2e8f0;
-    --b:#1f2937; --ok:#10b981; --warn:#f59e0b; --err:#ef4444; --primary:#1d4ed8; --panel-2:#0b1220; }
-  *{box-sizing:border-box} html,body{height:100%}
-  body{margin:0; font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+  :root{
+    --bg:#0f172a; --panel:#111827; --muted:#94a3b8; --text:#e2e8f0;
+    --b:#1f2937; --ok:#10b981; --warn:#f59e0b; --err:#ef4444;
+    --primary:#1d4ed8; --panel-2:#0b1220; --shadow:0 10px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
     background:radial-gradient(80% 100% at 20% 0%, #0b1220 0%, var(--bg) 60%),
                radial-gradient(80% 120% at 120% -10%, #0b1220 0%, transparent 60%) var(--bg);
-    color:var(--text)}
-  .wrap{max-width:1100px;margin:0 auto;padding:20px}
+    color:var(--text)
+  }
+  a{color:inherit}
+
+  /* Topbar */
+  .topbar{position:sticky; top:0; z-index:20; backdrop-filter: blur(10px);
+    background:color-mix(in hsl, var(--bg) 82%, transparent); border-bottom:1px solid #111520; }
+  .wrap{max-width:1180px; margin:0 auto; padding:20px}
+  .brand{display:flex; align-items:center; gap:12px}
+  .brand .logo{width:36px; height:36px; display:grid; place-items:center; border-radius:10px;
+    background:linear-gradient(135deg,#1f2937, #0b1220); border:1px solid #1a2435; box-shadow:var(--shadow)}
+  h1{font-size:20px; margin:0}
+  .muted{color:var(--muted)}
+
+  /* Layout */
+  .grid{display:grid; gap:16px; grid-template-columns:1fr}
+  @media(min-width:980px){ .grid{grid-template-columns:360px 1fr} }
+
+  /* Cards */
   .card{background:linear-gradient(180deg, rgba(255,255,255,.02), transparent 30%) var(--panel);
-    border:1px solid #1a2435; border-radius:18px; padding:18px}
-  label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
-  input,select{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--b);background:var(--panel-2);color:var(--text)}
-  button{padding:10px 14px;border:1px solid var(--b);border-radius:12px;background:var(--panel-2);color:var(--text);cursor:pointer}
-  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-  table{width:100%;border-collapse:collapse} th,td{border-top:1px solid var(--b);padding:10px;text-align:left;font-size:14px}
-  .badge{display:inline-block;padding:4px 10px;border-radius:999px;font-weight:600;font-size:12px}
-  .tramite{background:rgba(245,158,11,.15); color:#fbbf24; border:1px solid rgba(245,158,11,.35)}
-  .entregado{background:rgba(16,185,129,.15); color:#34d399; border:1px solid rgba(16,185,129,.35)}
-  .transito{background:rgba(59,130,246,.15); color:#93c5fd; border:1px solid rgba(59,130,246,.35)}
-  .devuelto{background:rgba(239,68,68,.15); color:#fca5a5; border:1px solid rgba(239,68,68,.35)}
+    border:1px solid #1a2435; border-radius:18px; padding:18px; box-shadow:0 10px 20px rgba(0,0,0,.15)}
+  .card h2{font-size:16px; margin:0 0 10px; color:#d6e0ee}
+
+  label{display:block; font-size:13px; color:var(--muted); margin-bottom:6px}
+  input,select{
+    width:100%; padding:12px 14px; border-radius:12px; border:1px solid var(--b); background:var(--panel-2); color:var(--text)
+  }
+  input::placeholder{color:#6b7a90}
+  .row{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+
+  button{
+    padding:10px 14px; border:1px solid var(--b); border-radius:12px; background:var(--panel-2);
+    color:var(--text); cursor:pointer; transition:.15s transform ease, .15s background-color ease, .2s box-shadow ease
+  }
+  button:hover{transform:translateY(-1px)}
+  .btn-primary{background:var(--primary); border-color:var(--primary)}
+  .btn-ok{background:var(--ok); border-color:var(--ok); color:#06241b}
+  .btn-warn{background:var(--warn); border-color:var(--warn); color:#2a1800}
+  .btn-ghost{background:transparent}
+  .btn-danger{background:var(--err); border-color:var(--err)}
+
+  .toolbar{display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:8px}
+  .search{flex:1 1 260px; display:flex; gap:8px; align-items:center}
+  .pill{display:inline-flex; gap:8px; align-items:center; padding:6px 10px; border-radius:999px; border:1px solid var(--b); background:var(--panel-2); font-size:13px; color:var(--muted); white-space:nowrap}
+
+  /* Badges */
+  .badge{display:inline-block; padding:4px 10px; border-radius:999px; font-weight:600; font-size:12px}
+  .badge.tramite{background:rgba(245,158,11,.15); color:#fbbf24; border:1px solid rgba(245,158,11,.35)}
+  .badge.transito{background:rgba(59,130,246,.15); color:#93c5fd; border:1px solid rgba(59,130,246,.35)}
+  .badge.entregado{background:rgba(16,185,129,.15); color:#34d399; border:1px solid rgba(16,185,129,.35)}
+  .badge.devuelto{background:rgba(239,68,68,.15); color:#fca5a5; border:1px solid rgba(239,68,68,.35)}
+
+  /* Tables */
+  table{width:100%; border-collapse:collapse}
+  th,td{border-top:1px solid var(--b); padding:10px; text-align:left; font-size:14px}
+  thead th{color:var(--muted); font-weight:600; position:sticky; top:0; background:var(--panel)}
   .right{text-align:right}
-  .toast{position:fixed;right:18px;top:18px;padding:10px 14px;border-radius:12px;background:var(--panel);border:1px solid var(--b)}
+  .small{font-size:12px; color:var(--muted)}
+  .tbl-wrap{max-height:360px; overflow:auto; border-radius:12px; border:1px solid #1a2435}
+  .row-actions{display:flex; gap:6px}
+
+  /* Toasts */
+  .toasts{position:fixed; right:18px; top:18px; display:flex; flex-direction:column; gap:10px; z-index:50}
+  .toast{min-width:240px; max-width:400px; padding:12px 14px; border-radius:12px; border:1px solid var(--b); background:var(--panel); box-shadow:var(--shadow); display:flex; gap:10px; align-items:flex-start}
+  .toast.ok{border-color:rgba(16,185,129,.6)} .toast.err{border-color:rgba(239,68,68,.6)} .toast.info{border-color:#233148}
+  .toast .title{font-weight:700}
+  .toast .x{margin-left:auto; opacity:.7; cursor:pointer}
+
+  /* Empty state */
+  .empty{display:grid; place-items:center; padding:28px; color:var(--muted)}
+
+  /* Icon button */
+  .btn-icon{display:inline-grid; place-items:center; width:38px; height:38px; padding:0}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Admin — Seguimiento</h1>
-  <div class="card">
-    <div class="row">
-      <div style="flex:1 1 240px">
-        <label>Número de seguimiento</label>
-        <input id="track" placeholder="Ej: ABC123" autocomplete="off">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="wrap" style="display:flex; justify-content:space-between; align-items:center;">
+      <div class="brand">
+        <div class="logo">🛠️</div>
+        <div>
+          <h1>Admin — Seguimiento</h1>
+          <div class="muted" style="font-size:12px">Panel admin conectado a API</div>
+        </div>
       </div>
-      <div>
-        <label>Estado</label>
-        <select id="estado">
-          <option value="tramite">En trámite</option>
-          <option value="transito">En tránsito</option>
-          <option value="entregado">Entregado</option>
-          <option value="devuelto">Devuelto</option>
-        </select>
-      </div>
-      <div>
-        <label>&nbsp;</label>
-        <button id="btnCrear">Registrar / Actualizar</button>
-      </div>
-      <div style="margin-left:auto">
-        <label>Admin Key</label>
-        <input id="adminkey" placeholder="x-admin-key" autocomplete="off">
+
+      <div class="row">
+        <div style="display:flex; align-items:center; gap:6px">
+          <label class="muted" for="adminkey" style="margin:0; font-size:12px">Admin Key</label>
+          <input id="adminkey" type="password" placeholder="••••••••" style="width:200px" autocomplete="off">
+          <button class="btn-ghost btn-icon" id="toggleKey" title="Mostrar/ocultar">👁️</button>
+          <span class="pill" id="keyPill">🔒 Clave no guardada</span>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="card" style="margin-top:16px">
-    <div class="row" style="justify-content:space-between">
-      <div class="row">
-        <input id="q" placeholder="Buscar...">
-        <button id="btnBuscar">Buscar</button>
-      </div>
-      <div class="row">
-        <button id="btnRefrescar">Refrescar</button>
-        <button id="btnBorrarTodo" style="background:#561515;border-color:#6b1b1b">Borrar todo</button>
-      </div>
-    </div>
-    <div style="margin-top:10px; overflow:auto; max-height:420px; border:1px solid #1a2435;border-radius:12px">
-      <table>
-        <thead><tr><th>ID</th><th>Estado</th><th>Creado</th><th>Actualizado</th><th class="right">Acciones</th></tr></thead>
-        <tbody id="tbl"></tbody>
-      </table>
+  <div class="wrap" style="padding-top:18px">
+    <div class="grid">
+
+      <!-- Panel izquierdo: acciones / detalle -->
+      <section class="card">
+        <h2>Nueva actualización</h2>
+        <div class="row">
+          <div style="flex:1 1 100%">
+            <label for="track">Número de seguimiento</label>
+            <input id="track" placeholder="Ej: ABC123, 0001-BO" autocomplete="off" />
+          </div>
+        </div>
+        <div class="row">
+          <div style="flex:1 1 100%">
+            <label for="estado">Estado</label>
+            <select id="estado">
+              <option value="tramite">En trámite</option>
+              <option value="transito">En tránsito</option>
+              <option value="entregado">Entregado</option>
+              <option value="devuelto">Devuelto</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <button class="btn-primary" id="btnGuardar">Registrar / Actualizar</button>
+          <button class="btn-ok" id="btnEntregar">Marcar Entregado</button>
+          <button class="btn-ghost" id="btnBuscar">Buscar</button>
+        </div>
+
+        <hr style="border:none; border-top:1px solid var(--b); margin:16px 0">
+        <h2>Detalle</h2>
+        <div id="detalle" class="small">
+          <div class="empty">Sin selección.</div>
+        </div>
+      </section>
+
+      <!-- Panel derecho: tablas -->
+      <section class="card">
+        <div class="toolbar">
+          <div class="search">
+            <input id="q" placeholder="Buscar por número…" />
+            <span class="pill" id="countPill">0 envíos</span>
+          </div>
+          <div class="row">
+            <button class="btn-ghost" id="btnRefrescar" title="Refrescar">🔄 Refrescar</button>
+            <button class="btn-danger" id="btnBorrarTodo" title="Borrar todos">🗑️ Borrar todo</button>
+          </div>
+        </div>
+
+        <div class="row" style="gap:16px; align-items:start; flex-wrap:wrap">
+          <div style="flex:1 1 420px; min-width:320px">
+            <h2 style="display:flex; justify-content:space-between; align-items:center">
+              Pendientes <span class="badge tramite">Trámite</span> <span class="badge transito">Tránsito</span>
+            </h2>
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr>
+                  <th>Seguimiento</th><th>Creado</th><th>Actualizado</th><th class="right">Acciones</th>
+                </tr></thead>
+                <tbody id="tblPend"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div style="flex:1 1 420px; min-width:320px">
+            <h2 style="display:flex; justify-content:space-between; align-items:center">
+              Cerrados <span class="badge entregado">Entregado</span> <span class="badge devuelto">Devuelto</span>
+            </h2>
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr>
+                  <th>Seguimiento</th><th>Creado</th><th>Actualizado</th><th class="right">Acciones</th>
+                </tr></thead>
+                <tbody id="tblCerr"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </div>
   </div>
-</div>
 
-<div id="toast" class="toast" style="display:none"></div>
+  <!-- Toasts -->
+  <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script>
+/* ===== API & Utils ===== */
 const API = location.origin + '/api';
 const $ = s => document.querySelector(s);
-function showToast(msg){ const t=$('#toast'); t.textContent=msg; t.style.display='block'; setTimeout(()=>t.style.display='none',2200) }
-function norm(s){ return (s||'').trim().toUpperCase(); }
-function badge(st){ return `<span class="badge ${st}">${st.replace(/^./,c=>c.toUpperCase())}</span>` }
-function fmt(ts){ try { return new Date(ts).toLocaleString(); } catch { return ts; } }
-function key(){ return $('#adminkey').value.trim(); }
-
-async function list(q=''){
-  const r = await fetch(`${API}/tracking?q=${encodeURIComponent(q)}`, { headers: { 'x-admin-key': key() } });
-  if(!r.ok){ showToast('Error listando'); return []; }
-  const data = await r.json();
-  return data;
+const $$ = s => Array.from(document.querySelectorAll(s));
+const STATUS = {
+  tramite: { label:'En trámite', badge:'tramite' },
+  transito: { label:'En tránsito', badge:'transito' },
+  entregado: { label:'Entregado', badge:'entregado' },
+  devuelto: { label:'Devuelto', badge:'devuelto' }
+};
+function norm(v){ return (v||'').trim().toUpperCase(); }
+function fmt(ts){ try{ return new Date(ts).toLocaleString(); }catch{ return ts; } }
+function badge(s){ const d=STATUS[s]||STATUS.tramite; return `<span class="badge ${d.badge}">${d.label}</span>`; }
+function toast(text, kind='info', timeout=2600){
+  const box = document.createElement('div');
+  box.className = `toast ${kind}`;
+  box.innerHTML = `<div class="title">${kind==='ok'?'Listo':'Aviso'}</div><div style="flex:1">${text}</div><div class="x">✕</div>`;
+  $('#toasts').appendChild(box);
+  const close = ()=> box.remove();
+  box.querySelector('.x').onclick = close;
+  if(timeout) setTimeout(close, timeout);
 }
 
-async function upsert(){
-  const id = norm($('#track').value);
-  const status = $('#estado').value;
-  if(!id) return showToast('Ingresá un ID');
-  // try update
-  let r = await fetch(`${API}/tracking/${id}`, { method:'PUT', headers:{'Content-Type':'application/json','x-admin-key':key()}, body:JSON.stringify({status}) });
+function getKey(){ return sessionStorage.getItem('adminKey') || ''; }
+function setKey(k){
+  if(k){ sessionStorage.setItem('adminKey', k); $('#keyPill').textContent = '🔐 Clave guardada'; }
+  else { sessionStorage.removeItem('adminKey'); $('#keyPill').textContent = '🔒 Clave no guardada'; }
+}
+
+/* ===== API calls ===== */
+async function apiList(q=''){
+  const r = await fetch(`${API}/tracking?q=${encodeURIComponent(q)}`, { headers:{ 'x-admin-key': getKey() }});
+  if(!r.ok) throw new Error('Error listando');
+  return r.json();
+}
+async function apiUpsert(id, status){
+  // intento update, si 404 creo
+  let r = await fetch(`${API}/tracking/${id}`, { method:'PUT', headers:{'Content-Type':'application/json','x-admin-key':getKey()}, body:JSON.stringify({status}) });
   if(r.status===404){
-    // create
-    r = await fetch(`${API}/tracking`, { method:'POST', headers:{'Content-Type':'application/json','x-admin-key':key()}, body:JSON.stringify({id, status}) });
+    r = await fetch(`${API}/tracking`, { method:'POST', headers:{'Content-Type':'application/json','x-admin-key':getKey()}, body:JSON.stringify({id, status}) });
   }
-  if(!r.ok){ const e=await r.json().catch(()=>({})); return showToast('Error: '+(e.error||r.status)); }
-  showToast('Guardado');
-  $('#track').value='';
-  render();
+  if(!r.ok){ const e=await r.json().catch(()=>({error:r.status})); throw new Error(e.error||'Error'); }
+  return r.json();
+}
+async function apiSetStatus(id, status){
+  const r = await fetch(`${API}/tracking/${id}`, { method:'PUT', headers:{'Content-Type':'application/json','x-admin-key':getKey()}, body:JSON.stringify({status}) });
+  if(!r.ok){ const e=await r.json().catch(()=>({error:r.status})); throw new Error(e.error||'Error'); }
+  return r.json();
+}
+async function apiDelete(id){
+  const r = await fetch(`${API}/tracking/${id}`, { method:'DELETE', headers:{'x-admin-key':getKey()} });
+  if(!r.ok) throw new Error('No se pudo borrar');
+  return r.json();
+}
+async function apiDeleteAll(){
+  const r = await fetch(`${API}/tracking`, { method:'DELETE', headers:{'x-admin-key':getKey()} });
+  if(!r.ok) throw new Error('No se pudo borrar todo');
+  return r.json();
 }
 
-async function del(id){
-  if(!confirm('¿Eliminar '+id+'?')) return;
-  const r = await fetch(`${API}/tracking/${id}`, { method:'DELETE', headers:{'x-admin-key':key()} });
-  if(!r.ok) return showToast('No se pudo borrar');
-  showToast('Eliminado');
-  render();
-}
+/* ===== Render ===== */
+function renderTables(rows){
+  const pend = rows.filter(r=> r.status==='tramite' || r.status==='transito');
+  const cerr = rows.filter(r=> r.status==='entregado' || r.status==='devuelto');
 
-async function delAll(){
-  if(!confirm('¿Borrar TODOS?')) return;
-  const r = await fetch(`${API}/tracking`, { method:'DELETE', headers:{'x-admin-key':key()} });
-  if(!r.ok) return showToast('No se pudo borrar todo');
-  showToast('Todo eliminado');
-  render();
-}
+  $('#countPill').textContent = `${rows.length} envío${rows.length===1?'':'s'}`;
 
-async function render(q=''){
-  const rows = await list(q);
-  const html = rows.map(r => `
-    <tr>
-      <td>${r.id}</td>
-      <td>${badge(r.status)}</td>
+  const mkRow = r => `
+    <tr data-id="${r.id}">
+      <td><a href="#" class="lnk">${r.id}</a><div class="small">${badge(r.status)}</div></td>
       <td>${fmt(r.createdAt)}</td>
       <td>${fmt(r.updatedAt)}</td>
       <td class="right">
-        <button onclick="del('${r.id}')">🗑️</button>
+        <div class="row-actions">
+          <button class="btn-ghost btn-sm act-copiar" title="Copiar ID">📋</button>
+          <button class="btn-ok btn-sm act-entregado" title="Marcar entregado">✔</button>
+          <button class="btn-warn btn-sm act-transito" title="Marcar en tránsito">↻</button>
+          <button class="btn-ghost btn-sm act-tramite" title="Volver a trámite">↩</button>
+          <button class="btn-danger btn-sm act-borrar" title="Eliminar">🗑️</button>
+        </div>
       </td>
-    </tr>
-  `).join('') || `<tr><td colspan="5" style="text-align:center;color:#94a3b8">Sin datos</td></tr>`;
-  $('#tbl').innerHTML = html;
+    </tr>`;
+
+  $('#tblPend').innerHTML = pend.map(mkRow).join('') || `<tr><td colspan="4"><div class="empty">Sin pendientes.</div></td></tr>`;
+  $('#tblCerr').innerHTML = cerr.map(mkRow).join('') || `<tr><td colspan="4"><div class="empty">Sin cerrados.</div></td></tr>`;
+
+  // binds
+  ['#tblPend','#tblCerr'].forEach(sel=>{
+    $(sel).querySelectorAll('.lnk').forEach(a=>{
+      a.addEventListener('click', e=>{
+        e.preventDefault();
+        const id = a.closest('tr').dataset.id;
+        const row = rows.find(x=>x.id===id);
+        mostrarDetalle(row);
+        $('#track').value = id;
+        $('#track').focus();
+      });
+    });
+    $(sel).querySelectorAll('.act-copiar').forEach(btn=>{
+      btn.addEventListener('click', async ()=> {
+        const id = btn.closest('tr').dataset.id;
+        try{ await navigator.clipboard.writeText(id); toast(`Copiado: ${id}`,'ok',1600);}catch{toast('No se pudo copiar','err');}
+      });
+    });
+    $(sel).querySelectorAll('.act-entregado').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const id = btn.closest('tr').dataset.id; await apiSetStatus(id,'entregado'); toast(`"${id}" → Entregado`,'ok'); loadAndRender();
+      });
+    });
+    $(sel).querySelectorAll('.act-transito').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const id = btn.closest('tr').dataset.id; await apiSetStatus(id,'transito'); toast(`"${id}" → En tránsito`,'ok'); loadAndRender();
+      });
+    });
+    $(sel).querySelectorAll('.act-tramite').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const id = btn.closest('tr').dataset.id; await apiSetStatus(id,'tramite'); toast(`"${id}" → En trámite`,'ok'); loadAndRender();
+      });
+    });
+    $(sel).querySelectorAll('.act-borrar').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const id = btn.closest('tr').dataset.id;
+        if(!confirm(`¿Eliminar "${id}"?`)) return;
+        await apiDelete(id); toast(`"${id}" eliminado`,'ok'); loadAndRender();
+      });
+    });
+  });
 }
 
-$('#btnCrear').onclick = upsert;
-$('#btnRefrescar').onclick = () => render($('#q').value);
-$('#btnBuscar').onclick = () => render($('#q').value);
-$('#btnBorrarTodo').onclick = delAll;
+function mostrarDetalle(o){
+  if(!o){ $('#detalle').innerHTML = `<div class="empty">No encontrado.</div>`; return; }
+  $('#detalle').innerHTML = `
+    <div style="display:grid; gap:6px; font-size:14px">
+      <div><b>Seguimiento:</b> <span class="mono">${o.id}</span></div>
+      <div><b>Estado:</b> ${badge(o.status)}</div>
+      <div><b>Creado:</b> ${fmt(o.createdAt)}</div>
+      <div><b>Actualizado:</b> ${fmt(o.updatedAt)}</div>
+      <div class="row" style="margin-top:8px">
+        <button class="btn-ok"    onclick="quickSet('${o.id}','entregado')">Marcar Entregado</button>
+        <button class="btn-warn"  onclick="quickSet('${o.id}','transito')">Marcar En tránsito</button>
+        <button class="btn-ghost" onclick="quickSet('${o.id}','tramite')">Volver a trámite</button>
+        <button class="btn-danger" onclick="quickDelete('${o.id}')">Eliminar</button>
+      </div>
+    </div>`;
+}
+window.quickSet = async (id,st)=>{ await apiSetStatus(id,st); toast(`"${id}" → ${STATUS[st].label}`,'ok'); loadAndRender(); }
+window.quickDelete = async (id)=>{ if(!confirm(`¿Eliminar "${id}"?`))return; await apiDelete(id); toast(`"${id}" eliminado`,'ok'); $('#detalle').innerHTML='<div class="empty">Sin selección.</div>'; loadAndRender(); }
 
-render();
+/* ===== Events & Init ===== */
+async function loadAndRender(){
+  try{
+    const q = $('#q').value || '';
+    const rows = await apiList(q);
+    renderTables(rows);
+  }catch(e){ toast('Error cargando datos','err'); }
+}
+
+$('#btnGuardar').addEventListener('click', async ()=>{
+  const id = norm($('#track').value); const st = $('#estado').value;
+  if(!id) return toast('Ingresá un número válido','err');
+  try{ const o = await apiUpsert(id, st); toast('Guardado','ok'); mostrarDetalle(o); $('#track').value=''; loadAndRender(); }
+  catch(e){ toast('Error guardando','err'); }
+});
+$('#btnEntregar').addEventListener('click', async ()=>{
+  const id = norm($('#track').value); if(!id) return toast('Ingresá un número válido','err');
+  try{ const o = await apiSetStatus(id,'entregado'); toast('Marcado como Entregado','ok'); mostrarDetalle(o); loadAndRender(); }
+  catch(e){ toast('Error actualizando','err'); }
+});
+$('#btnBuscar').addEventListener('click', loadAndRender);
+$('#btnRefrescar').addEventListener('click', loadAndRender);
+$('#btnBorrarTodo').addEventListener('click', async ()=>{
+  if(!confirm('¿Borrar TODOS los envíos?')) return;
+  try{ await apiDeleteAll(); toast('Todos eliminados','ok'); $('#detalle').innerHTML='<div class="empty">Sin selección.</div>'; loadAndRender(); }
+  catch(e){ toast('No se pudo borrar todo','err'); }
+});
+let qTimer=null;
+$('#q').addEventListener('input', ()=>{ clearTimeout(qTimer); qTimer=setTimeout(loadAndRender, 180); });
+
+/* Admin Key: oculto + toggle + persistencia */
+(function initKey(){
+  const saved = getKey();
+  if(saved){ $('#adminkey').value = saved; $('#keyPill').textContent = '🔐 Clave guardada'; }
+  $('#adminkey').addEventListener('change', ()=> setKey($('#adminkey').value.trim()));
+  $('#toggleKey').addEventListener('click', ()=>{
+    const f = $('#adminkey'); f.type = (f.type==='password' ? 'text' : 'password');
+  });
+})();
+
+/* Primera carga */
+loadAndRender();
 </script>
 </body>
 </html>
