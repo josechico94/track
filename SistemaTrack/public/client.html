@@ -1,0 +1,76 @@
+
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Seguimiento de paquete</title>
+<style>
+  :root{ --bg:#0f172a; --panel:#111827; --muted:#94a3b8; --text:#e2e8f0; --b:#1f2937; --primary:#1d4ed8; }
+  *{box-sizing:border-box} body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text)}
+  .wrap{max-width:720px;margin:0 auto;padding:22px}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,.02), transparent 30%) var(--panel);border:1px solid #1a2435;border-radius:18px;padding:18px}
+  label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+  input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--b);background:#0b1220;color:var(--text)}
+  button{padding:10px 14px;border:1px solid var(--b);border-radius:12px;background:#0b1220;color:var(--text);cursor:pointer}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .badge{display:inline-block;padding:4px 10px;border-radius:999px;font-weight:600;font-size:12px}
+  .tramite{background:rgba(245,158,11,.15); color:#fbbf24; border:1px solid rgba(245,158,11,.35)}
+  .entregado{background:rgba(16,185,129,.15); color:#34d399; border:1px solid rgba(16,185,129,.35)}
+  .transito{background:rgba(59,130,246,.15); color:#93c5fd; border:1px solid rgba(59,130,246,.35)}
+  .devuelto{background:rgba(239,68,68,.15); color:#fca5a5; border:1px solid rgba(239,68,68,.35)}
+  .muted{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Seguimiento</h1>
+  <div class="card">
+    <div class="row">
+      <div style="flex:1 1 360px">
+        <label>Ingresá tu número</label>
+        <input id="track" placeholder="Ej: ABC123" autocomplete="off">
+      </div>
+      <div>
+        <label>&nbsp;</label>
+        <button id="btnVer">Ver estado</button>
+      </div>
+    </div>
+    <div id="res" style="margin-top:16px"></div>
+  </div>
+</div>
+
+<script>
+const API = location.origin + '/api';
+const $ = s => document.querySelector(s);
+function fmt(ts){ try { return new Date(ts).toLocaleString(); } catch { return ts; } }
+function norm(s){ return (s||'').trim().toUpperCase(); }
+function badge(st){ return `<span class="badge ${st}">${st.replace(/^./,c=>c.toUpperCase())}</span>` }
+
+async function ver(id){
+  id = norm(id);
+  if(!id){ $('#res').innerHTML='<div class="muted">Ingresá un número válido.</div>'; return; }
+  const r = await fetch(`${API}/tracking/${id}`);
+  if(r.status===404){ $('#res').innerHTML = `<div class="muted">No encontramos información para <b>${id}</b>.</div>`; return; }
+  if(!r.ok){ $('#res').innerHTML = `<div class="muted">Error consultando. Intenta más tarde.</div>`; return; }
+  const t = await r.json();
+  $('#res').innerHTML = `
+    <div style="display:grid;gap:8px">
+      <div><b>Seguimiento:</b> ${t.id}</div>
+      <div><b>Estado:</b> ${badge(t.status)}</div>
+      <div><b>Creado:</b> ${fmt(t.createdAt)}</div>
+      <div><b>Actualizado:</b> ${fmt(t.updatedAt)}</div>
+    </div>`;
+}
+
+$('#btnVer').onclick = ()=> ver($('#track').value);
+
+// auto con ?id=
+const params = new URLSearchParams(location.search);
+if(params.has('id')){
+  $('#track').value = params.get('id');
+  ver(params.get('id'));
+}
+</script>
+</body>
+</html>
