@@ -1,0 +1,156 @@
+
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Admin — Seguimiento</title>
+<style>
+  :root{ --bg:#0f172a; --panel:#111827; --muted:#94a3b8; --text:#e2e8f0;
+    --b:#1f2937; --ok:#10b981; --warn:#f59e0b; --err:#ef4444; --primary:#1d4ed8; --panel-2:#0b1220; }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{margin:0; font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+    background:radial-gradient(80% 100% at 20% 0%, #0b1220 0%, var(--bg) 60%),
+               radial-gradient(80% 120% at 120% -10%, #0b1220 0%, transparent 60%) var(--bg);
+    color:var(--text)}
+  .wrap{max-width:1100px;margin:0 auto;padding:20px}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,.02), transparent 30%) var(--panel);
+    border:1px solid #1a2435; border-radius:18px; padding:18px}
+  label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+  input,select{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--b);background:var(--panel-2);color:var(--text)}
+  button{padding:10px 14px;border:1px solid var(--b);border-radius:12px;background:var(--panel-2);color:var(--text);cursor:pointer}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  table{width:100%;border-collapse:collapse} th,td{border-top:1px solid var(--b);padding:10px;text-align:left;font-size:14px}
+  .badge{display:inline-block;padding:4px 10px;border-radius:999px;font-weight:600;font-size:12px}
+  .tramite{background:rgba(245,158,11,.15); color:#fbbf24; border:1px solid rgba(245,158,11,.35)}
+  .entregado{background:rgba(16,185,129,.15); color:#34d399; border:1px solid rgba(16,185,129,.35)}
+  .transito{background:rgba(59,130,246,.15); color:#93c5fd; border:1px solid rgba(59,130,246,.35)}
+  .devuelto{background:rgba(239,68,68,.15); color:#fca5a5; border:1px solid rgba(239,68,68,.35)}
+  .right{text-align:right}
+  .toast{position:fixed;right:18px;top:18px;padding:10px 14px;border-radius:12px;background:var(--panel);border:1px solid var(--b)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Admin — Seguimiento</h1>
+  <div class="card">
+    <div class="row">
+      <div style="flex:1 1 240px">
+        <label>Número de seguimiento</label>
+        <input id="track" placeholder="Ej: ABC123" autocomplete="off">
+      </div>
+      <div>
+        <label>Estado</label>
+        <select id="estado">
+          <option value="tramite">En trámite</option>
+          <option value="transito">En tránsito</option>
+          <option value="entregado">Entregado</option>
+          <option value="devuelto">Devuelto</option>
+        </select>
+      </div>
+      <div>
+        <label>&nbsp;</label>
+        <button id="btnCrear">Registrar / Actualizar</button>
+      </div>
+      <div style="margin-left:auto">
+        <label>Admin Key</label>
+        <input id="adminkey" placeholder="x-admin-key" autocomplete="off">
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="row" style="justify-content:space-between">
+      <div class="row">
+        <input id="q" placeholder="Buscar...">
+        <button id="btnBuscar">Buscar</button>
+      </div>
+      <div class="row">
+        <button id="btnRefrescar">Refrescar</button>
+        <button id="btnBorrarTodo" style="background:#561515;border-color:#6b1b1b">Borrar todo</button>
+      </div>
+    </div>
+    <div style="margin-top:10px; overflow:auto; max-height:420px; border:1px solid #1a2435;border-radius:12px">
+      <table>
+        <thead><tr><th>ID</th><th>Estado</th><th>Creado</th><th>Actualizado</th><th class="right">Acciones</th></tr></thead>
+        <tbody id="tbl"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast" style="display:none"></div>
+
+<script>
+const API = location.origin + '/api';
+const $ = s => document.querySelector(s);
+function showToast(msg){ const t=$('#toast'); t.textContent=msg; t.style.display='block'; setTimeout(()=>t.style.display='none',2200) }
+function norm(s){ return (s||'').trim().toUpperCase(); }
+function badge(st){ return `<span class="badge ${st}">${st.replace(/^./,c=>c.toUpperCase())}</span>` }
+function fmt(ts){ try { return new Date(ts).toLocaleString(); } catch { return ts; } }
+function key(){ return $('#adminkey').value.trim(); }
+
+async function list(q=''){
+  const r = await fetch(`${API}/tracking?q=${encodeURIComponent(q)}`, { headers: { 'x-admin-key': key() } });
+  if(!r.ok){ showToast('Error listando'); return []; }
+  const data = await r.json();
+  return data;
+}
+
+async function upsert(){
+  const id = norm($('#track').value);
+  const status = $('#estado').value;
+  if(!id) return showToast('Ingresá un ID');
+  // try update
+  let r = await fetch(`${API}/tracking/${id}`, { method:'PUT', headers:{'Content-Type':'application/json','x-admin-key':key()}, body:JSON.stringify({status}) });
+  if(r.status===404){
+    // create
+    r = await fetch(`${API}/tracking`, { method:'POST', headers:{'Content-Type':'application/json','x-admin-key':key()}, body:JSON.stringify({id, status}) });
+  }
+  if(!r.ok){ const e=await r.json().catch(()=>({})); return showToast('Error: '+(e.error||r.status)); }
+  showToast('Guardado');
+  $('#track').value='';
+  render();
+}
+
+async function del(id){
+  if(!confirm('¿Eliminar '+id+'?')) return;
+  const r = await fetch(`${API}/tracking/${id}`, { method:'DELETE', headers:{'x-admin-key':key()} });
+  if(!r.ok) return showToast('No se pudo borrar');
+  showToast('Eliminado');
+  render();
+}
+
+async function delAll(){
+  if(!confirm('¿Borrar TODOS?')) return;
+  const r = await fetch(`${API}/tracking`, { method:'DELETE', headers:{'x-admin-key':key()} });
+  if(!r.ok) return showToast('No se pudo borrar todo');
+  showToast('Todo eliminado');
+  render();
+}
+
+async function render(q=''){
+  const rows = await list(q);
+  const html = rows.map(r => `
+    <tr>
+      <td>${r.id}</td>
+      <td>${badge(r.status)}</td>
+      <td>${fmt(r.createdAt)}</td>
+      <td>${fmt(r.updatedAt)}</td>
+      <td class="right">
+        <button onclick="del('${r.id}')">🗑️</button>
+      </td>
+    </tr>
+  `).join('') || `<tr><td colspan="5" style="text-align:center;color:#94a3b8">Sin datos</td></tr>`;
+  $('#tbl').innerHTML = html;
+}
+
+$('#btnCrear').onclick = upsert;
+$('#btnRefrescar').onclick = () => render($('#q').value);
+$('#btnBuscar').onclick = () => render($('#q').value);
+$('#btnBorrarTodo').onclick = delAll;
+
+render();
+</script>
+</body>
+</html>
