@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Admin — Tracciamento (UI modernizzata · tema chiaro)</title>
+<link rel="icon" href="data:,">
+<style>
+  /* =================== TEMA (CHIARO FISSO) & TOKEN =================== */
+  :root{
+    --bg:#f3f4f6; --panel:#ffffff; --panel-2:#f8fafc; --muted:#6b7280; --text:#0f172a;
+    --b:#e5e7eb; --ok:#059669; --warn:#d97706; --err:#dc2626; --primary:#1d4ed8; --shadow:0 12px 30px rgba(0,0,0,.08);
+    --focus:#0ea5e9; --ring: 0 0 0 3px rgba(14,165,233,.25);
+    --radius:16px; --radius-lg:22px; --gap:16px; --gap-lg:22px;
+    --font: ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; font-family:var(--font);
+    background: radial-gradient(80% 120% at -10% -20%, #ffffff 0%, transparent 60%),
+                radial-gradient(80% 130% at 110% -10%, #ffffff 0%, transparent 60%), var(--bg);
+    color:var(--text);
+  }
+  a{color:inherit}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+  /* =================== TOPBAR =================== */
+  .topbar{position:sticky; top:0; z-index:40; backdrop-filter: blur(10px);
+    background:color-mix(in hsl, var(--bg) 85%, transparent); border-bottom:1px solid var(--b)}
+  .wrap{max-width:1200px; margin:0 auto; padding:16px}
+  .brand{display:flex; align-items:center; gap:12px}
+  .brand .logo{width:40px; height:40px; display:grid; place-items:center; border-radius:14px;
+    background:linear-gradient(135deg, color-mix(in srgb, var(--panel) 80%, #000 5%), var(--panel-2)); border:1px solid var(--b); box-shadow:var(--shadow)}
+  h1{font-size:18px; margin:0}
+  .muted{color:var(--muted)}
+
+  /* =================== LAYOUT =================== */
+  .grid{display:grid; gap:var(--gap); grid-template-columns:1fr}
+  @media(min-width:980px){ .grid{grid-template-columns:360px 1fr} }
+
+  /* =================== CARDS =================== */
+  .card{background:linear-gradient(180deg, rgba(0,0,0,.02), transparent 30%) var(--panel);
+    border:1px solid var(--b); border-radius:var(--radius-lg); padding:18px; box-shadow:var(--shadow)}
+  .card h2{font-size:16px; margin:0 0 10px}
+
+  label{display:block; font-size:13px; color:var(--muted); margin:0 0 6px}
+  input,select{
+    width:100%; padding:12px 14px; border-radius:12px; border:1px solid var(--b); background:var(--panel-2); color:var(--text)
+  }
+  input::placeholder{color:#9aa2ad}
+  input:focus, select:focus, button:focus{outline:none; box-shadow:var(--ring); border-color:var(--focus)}
+  .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+
+  button{
+    padding:10px 14px; border:1px solid var(--b); border-radius:12px; background:var(--panel-2);
+    color:var(--text); cursor:pointer; transition:.18s transform ease, .15s background-color ease, .2s box-shadow ease
+  }
+  button:hover{transform:translateY(-1px)}
+  .btn-primary{background:var(--primary); border-color:var(--primary); color:white}
+  .btn-ok{background:var(--ok); border-color:var(--ok); color:white}
+  .btn-warn{background:var(--warn); border-color:var(--warn); color:white}
+  .btn-ghost{background:transparent}
+  .btn-danger{background:var(--err); border-color:var(--err); color:white}
+  .btn-icon{display:inline-grid; place-items:center; width:38px; height:38px; padding:0}
+  .btn-sm{padding:8px 10px; border-radius:10px}
+
+  .toolbar{display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:10px}
+  .search{flex:1 1 280px; display:flex; gap:8px; align-items:center}
+  .pill{display:inline-flex; gap:8px; align-items:center; padding:6px 10px; border-radius:999px; border:1px solid var(--b); background:var(--panel-2); font-size:13px; color:var(--muted); white-space:nowrap}
+
+  /* =================== BADGES =================== */
+  .badge{display:inline-block; padding:4px 10px; border-radius:999px; font-weight:700; font-size:12px; letter-spacing:.2px}
+  .badge.tramite{background:rgba(245,158,11,.15); color:#b45309; border:1px solid rgba(245,158,11,.35)}
+  .badge.transito{background:rgba(59,130,246,.15); color:#1d4ed8; border:1px solid rgba(59,130,246,.35)}
+  .badge.entregado{background:rgba(16,185,129,.15); color:#047857; border:1px solid rgba(16,185,129,.35)}
+  .badge.devuelto{background:rgba(239,68,68,.15); color:#b91c1c; border:1px solid rgba(239,68,68,.35)}
+
+  /* =================== TABLES =================== */
+  table{width:100%; border-collapse:collapse}
+  th,td{border-top:1px solid var(--b); padding:12px 10px; text-align:left; font-size:14px}
+  thead th{color:var(--muted); font-weight:700; position:sticky; top:0; background:var(--panel)}
+  .right{text-align:right}
+  .small{font-size:12px; color:var(--muted)}
+  .tbl-wrap{max-height:380px; overflow:auto; border-radius:12px; border:1px solid var(--b)}
+  .row-actions{display:flex; gap:6px; justify-content:flex-end}
+
+  /* =================== LIST (mobile fallback) =================== */
+  @media(max-width:640px){
+    .tbl-wrap table{display:none}
+    .list{display:grid; gap:10px}
+    .list-item{border:1px solid var(--b); background:var(--panel); border-radius:14px; padding:12px}
+    .list-item .top{display:flex; justify-content:space-between; gap:8px}
+    .list-item .meta{display:grid; gap:4px; margin-top:8px; color:var(--muted); font-size:12px}
+    .list-item .actions{display:flex; gap:6px; justify-content:flex-end; margin-top:10px}
+  }
+
+  /* =================== SEGMENTED FILTER =================== */
+  .seg{display:flex; gap:8px; padding:6px; background:var(--panel); border:1px solid var(--b); border-radius:999px}
+  .seg button{background:transparent; border:none; padding:8px 12px; border-radius:999px; color:var(--muted); font-weight:700}
+  .seg button[aria-pressed="true"]{background:var(--panel-2); color:var(--text); border:1px solid var(--b)}
+
+  /* =================== TOASTS =================== */
+  .toasts{position:fixed; right:14px; top:14px; display:flex; flex-direction:column; gap:10px; z-index:60}
+  .toast{min-width:240px; max-width:400px; padding:12px 14px; border-radius:14px; border:1px solid var(--b); background:var(--panel); box-shadow:var(--shadow); display:flex; gap:10px; align-items:flex-start}
+  .toast.ok{border-color:rgba(16,185,129,.6)} .toast.err{border-color:rgba(239,68,68,.6)} .toast.info{border-color:#93c5fd}
+  .toast .title{font-weight:800}
+  .toast .x{margin-left:auto; opacity:.7; cursor:pointer}
+
+  /* =================== MODAL =================== */
+  .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:70}
+  .modal.open{display:flex}
+  .modal .backdrop{position:absolute; inset:0; background:rgba(0,0,0,.35)}
+  .modal .dialog{position:relative; background:var(--panel); border:1px solid var(--b); border-radius:18px; box-shadow:var(--shadow); width:min(560px, 92vw); padding:18px}
+  .modal h3{margin:0 0 8px; font-size:18px}
+  .modal .close{position:absolute; right:10px; top:10px}
+
+  /* =================== MISC =================== */
+  .empty{display:grid; place-items:center; padding:28px; color:var(--muted)}
+  .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+  .hint{font-size:12px; color:var(--muted)}
+  .kbd{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; border:1px solid var(--b); background:var(--panel-2); padding:2px 6px; border-radius:6px}
+  .spinner{width:18px;height:18px;border:3px solid var(--b);border-top-color:#93c5fd;border-radius:50%;animation:sp .9s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+  <!-- =================== TOPBAR =================== -->
+  <div class="topbar" role="banner">
+    <div class="wrap" style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap">
+      <div class="brand" aria-label="Identità del sito">
+        <div class="logo" aria-hidden>🛠️</div>
+        <div>
+          <h1>Admin — Tracciamento</h1>
+          <div class="muted" style="font-size:12px">Pannello admin collegato all'API</div>
+        </div>
+      </div>
+
+      <div class="row" style="align-items:center">
+        <div style="display:flex; align-items:center; gap:6px">
+          <label class="muted" for="adminkey" style="margin:0; font-size:12px">Chiave Admin</label>
+          <input id="adminkey" type="password" placeholder="••••••••" style="width:200px" autocomplete="off" aria-label="Chiave Admin">
+          <button class="btn-ghost btn-icon" id="toggleKey" title="Mostra/nascondi" aria-label="Mostra o nascondi chiave">👁️</button>
+          <span class="pill" id="keyPill" aria-live="polite">🔒 Chiave non salvata</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap" style="padding-top:14px">
+    <div class="grid">
+
+      <!-- =================== PANNELLO SINISTRO =================== -->
+      <section class="card" aria-labelledby="formTitle">
+        <h2 id="formTitle">Nuovo aggiornamento</h2>
+        <div class="row">
+          <div style="flex:1 1 100%">
+            <label for="track">Numero di tracciamento</label>
+            <input id="track" placeholder="Es: ABC123, 0001-BO" autocomplete="off" />
+          </div>
+        </div>
+        <div class="row">
+          <div style="flex:1 1 100%">
+            <label for="estado">Stato</label>
+            <select id="estado">
+              <option value="tramite">In corso</option>
+              <option value="transito">In transito</option>
+              <option value="entregado">Consegnato</option>
+              <option value="devuelto">Restituito</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <button class="btn-primary" id="btnGuardar">Registra / Aggiorna</button>
+          <button class="btn-ok" id="btnEntregar">Segna come Consegnato</button>
+        </div>
+
+        <p class="hint" style="margin-top:8px">Scorciatoie: <span class="kbd">/</span> cerca · <span class="kbd">n</span> nuovo · <span class="kbd">r</span> aggiorna</p>
+      </section>
+
+      <!-- =================== PANNELLO DESTRO =================== -->
+      <section class="card" aria-labelledby="tablaTitle">
+        <div class="toolbar">
+          <div class="search" role="search">
+            <input id="q" placeholder="Cerca per numero…" aria-label="Cerca per numero" />
+            <span class="pill" id="countPill">0 spedizioni</span>
+          </div>
+          <div class="row">
+            <div class="seg" role="tablist" aria-label="Filtro per stato">
+              <button class="seg-btn" data-filter="tramite" role="tab">In corso</button>
+              <button class="seg-btn" data-filter="transito" role="tab">In transito</button>
+              <button class="seg-btn" data-filter="entregado" role="tab">Consegnato</button>
+              <button class="seg-btn" data-filter="devuelto" role="tab">Restituito</button>
+            </div>
+            <select id="sort" title="Ordina" aria-label="Ordina">
+              <option value="-updated">Più recenti</option>
+              <option value="-created">Creato (decresc.)</option>
+              <option value="created">Creato (cresc.)</option>
+              <option value="id">ID (A→Z)</option>
+              <option value="-id">ID (Z→A)</option>
+            </select>
+            <button class="btn-ghost" id="btnRefrescar" title="Aggiorna">🔄 Aggiorna</button>
+            <button class="btn-danger" id="btnBorrarTodo" title="Elimina tutti">🗑️ Elimina tutti</button>
+          </div>
+        </div>
+
+        <div id="prompt" class="empty">Applica un filtro per vedere i risultati.</div>
+
+        <div class="row" id="tablesArea" style="gap:16px; align-items:start; flex-wrap:wrap; display:none">
+          <div style="flex:1 1 420px; min-width:320px">
+            <h2 style="display:flex; justify-content:space-between; align-items:center">
+              In sospeso <span class="badge tramite">In corso</span> <span class="badge transito">In transito</span>
+            </h2>
+            <div class="tbl-wrap" id="wrapPend">
+              <table>
+                <thead><tr>
+                  <th>Tracciamento</th><th>Creato</th><th>Aggiornato</th><th class="right">Azioni</th>
+                </tr></thead>
+                <tbody id="tblPend"></tbody>
+              </table>
+              <div class="list" id="listPend" hidden></div>
+            </div>
+          </div>
+
+          <div style="flex:1 1 420px; min-width:320px">
+            <h2 style="display:flex; justify-content:space-between; align-items:center">
+              Chiusi <span class="badge entregado">Consegnato</span> <span class="badge devuelto">Restituito</span>
+            </h2>
+            <div class="tbl-wrap" id="wrapCerr">
+              <table>
+                <thead><tr>
+                  <th>Tracciamento</th><th>Creato</th><th>Aggiornato</th><th class="right">Azioni</th>
+                </tr></thead>
+                <tbody id="tblCerr"></tbody>
+              </table>
+              <div class="list" id="listCerr" hidden></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- TOASTS -->
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <!-- MODAL DETTAGLIO -->
+  <div class="modal" id="modal">
+    <div class="backdrop" id="modalBackdrop"></div>
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <button class="btn-ghost btn-icon close" id="modalClose" aria-label="Chiudi">✕</button>
+      <h3 id="modalTitle">Dettaglio</h3>
+      <div id="modalBody" class="small">Caricamento…</div>
+    </div>
+  </div>
+
+<script>
+/* =================== API & UTILS =================== */
+const API = location.origin + '/api';
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const STATUS = {
+  tramite: { label:'In corso', badge:'tramite' },
+  transito: { label:'In transito', badge:'transito' },
+  entregado: { label:'Consegnato', badge:'entregado' },
+  devuelto: { label:'Restituito', badge:'devuelto' }
+};
+function norm(v){ return (v||'').trim().toUpperCase(); }
+function fmt(ts){ try{ return new Date(ts).toLocaleString(); }catch{ return ts; } }
+function badge(s){ const d=STATUS[s]||STATUS.tramite; return `<span class="badge ${d.badge}">${d.label}</span>`; }
+function toast(text, kind='info', timeout=2600){
+  const box = document.createElement('div');
+  box.className = `toast ${kind}`;
+  box.innerHTML = `<div class="title">${kind==='ok'?'Fatto':'Avviso'}</div><div style="flex:1">${text}</div><button class="x btn-ghost btn-sm" aria-label="Chiudi">✕</button>`;
+  $('#toasts').appendChild(box);
+  const close = ()=> box.remove();
+  box.querySelector('.x').onclick = close;
+  if(timeout) setTimeout(close, timeout);
+}
+
+function getKey(){ return sessionStorage.getItem('adminKey') || ''; }
+function setKey(k){
+  if(k){ sessionStorage.setItem('adminKey', k); $('#keyPill').textContent = '🔐 Chiave salvata'; }
+  else { sessionStorage.removeItem('adminKey'); $('#keyPill').textContent = '🔒 Chiave non salvata'; }
+}
+
+/* =================== API CALLS =================== */
+async function apiList(q=''){
+  const r = await fetch(`${API}/tracking?q=${encodeURIComponent(q)}`, { headers:{ 'x-admin-key': getKey() }});
+  if(!r.ok) throw new Error('Errore durante il caricamento della lista');
+  return r.json();
+}
+async function apiUpsert(id, status){
+  let r = await fetch(`${API}/tracking/${id}`, { method:'PUT', headers:{'Content-Type':'application/json','x-admin-key':getKey()}, body:JSON.stringify({status}) });
+  if(r.status===404){
+    r = await fetch(`${API}/tracking`, { method:'POST', headers:{'Content-Type':'application/json','x-admin-key':getKey()}, body:JSON.stringify({id, status}) });
+  }
+  if(!r.ok){ const e=await r.json().catch(()=>({error:r.status})); throw new Error(e.error||'Errore'); }
+  return r.json();
+}
+async function apiSetStatus(id, status){
+  const r = await fetch(`${API}/tracking/${id}`, { method:'PUT', headers:{'Content-Type':'application/json','x-admin-key':getKey()}, body:JSON.stringify({status}) });
+  if(!r.ok){ const e=await r.json().catch(()=>({error:r.status})); throw new Error(e.error||'Errore'); }
+  return r.json();
+}
+async function apiDelete(id){
+  const r = await fetch(`${API}/tracking/${id}`, { method:'DELETE', headers:{'x-admin-key':getKey()} });
+  if(!r.ok) throw new Error('Impossibile eliminare');
+  return r.json();
+}
+async function apiDeleteAll(){
+  const r = await fetch(`${API}/tracking`, { method:'DELETE', headers:{'x-admin-key':getKey()} });
+  if(!r.ok) throw new Error('Impossibile eliminare tutto');
+  return r.json();
+}
+
+/* =================== STATE =================== */
+let _rows = [];
+let _filter = localStorage.getItem('flt') || '';// vuoto = nessun filtro applicato
+let _sort = localStorage.getItem('sort') || '-updated';
+
+/* =================== MODAL =================== */
+function openModalFor(o){
+  const body = `
+    <div style="display:grid; gap:8px; font-size:14px">
+      <div><b>Tracciamento:</b> <span class="mono">${o.id}</span></div>
+      <div><b>Stato:</b> ${badge(o.status)}</div>
+      <div><b>Creato:</b> ${fmt(o.createdAt)}</div>
+      <div><b>Aggiornato:</b> ${fmt(o.updatedAt)}</div>
+    </div>`;
+  $('#modalBody').innerHTML = body;
+  $('#modal').classList.add('open');
+}
+function closeModal(){ $('#modal').classList.remove('open'); }
+$('#modalBackdrop').addEventListener('click', closeModal);
+$('#modalClose').addEventListener('click', closeModal);
+window.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+/* =================== RENDER =================== */
+function applyFilter(rows){
+  if(!_filter) return [];
+  return rows.filter(r=> r.status===_filter);
+}
+function applySort(rows){
+  const get = (r,k)=> ({
+    'created': +new Date(r.createdAt||0), 'updated': +new Date(r.updatedAt||0), 'id': r.id||''
+  })[k];
+  const key = _sort.replace('-',''); const dir = _sort.startsWith('-') ? -1 : 1;
+  return [...rows].sort((a,b)=> (get(a,key)>get(b,key)?1:-1)*dir);
+}
+
+function renderTables(rows){
+  const filtered = applyFilter(rows);
+  const sorted = applySort(filtered);
+
+  const pend = sorted.filter(r=> ['tramite','transito'].includes(r.status));
+  const cerr  = sorted.filter(r=> ['entregado','devuelto'].includes(r.status));
+
+  $('#countPill').textContent = `${filtered.length} spedizion${filtered.length===1?'e':'i'}`;
+
+  const mkRow = r => `
+    <tr data-id="${r.id}">
+      <td><span class="mono">${r.id}</span><div class="small">${badge(r.status)}</div></td>
+      <td>${fmt(r.createdAt)}</td>
+      <td>${fmt(r.updatedAt)}</td>
+      <td class="right">
+        <div class="row-actions">
+          <button class="btn-ghost btn-sm act-copiar" title="Copia ID" aria-label="Copia ID">📋</button>
+          <button class="btn-ok btn-sm act-entregado" title="Segna come consegnato" aria-label="Segna come consegnato">✔</button>
+          <button class="btn-warn btn-sm act-transito" title="Segna in transito" aria-label="Segna in transito">↻</button>
+          <button class="btn-ghost btn-sm act-tramite" title="Torna in corso" aria-label="Torna in corso">↩</button>
+          <button class="btn-danger btn-sm act-borrar" title="Elimina" aria-label="Elimina">🗑️</button>
+        </div>
+      </td>
+    </tr>`;
+
+  const mkCard = r => `
+    <div class="list-item" data-id="${r.id}">
+      <div class="top">
+        <div class="mono">${r.id}</div>
+        ${badge(r.status)}
+      </div>
+      <div class="meta">
+        <div><b>Creato:</b> ${fmt(r.createdAt)}</div>
+        <div><b>Aggiornato:</b> ${fmt(r.updatedAt)}</div>
+      </div>
+      <div class="actions">
+        <button class="btn-ghost btn-sm act-copiar" title="Copia ID" aria-label="Copia ID">📋</button>
+        <button class="btn-ok btn-sm act-entregado" title="Segna come consegnato" aria-label="Segna come consegnato">✔</button>
+        <button class="btn-warn btn-sm act-transito" title="Segna in transito" aria-label="Segna in transito">↻</button>
+        <button class="btn-ghost btn-sm act-tramite" title="Torna in corso" aria-label="Torna in corso">↩</button>
+        <button class="btn-danger btn-sm act-borrar" title="Elimina" aria-label="Elimina">🗑️</button>
+      </div>
+    </div>`;
+
+  const pendHTML = pend.map(mkRow).join('') || `<tr><td colspan="4"><div class="empty">Nessun elemento in sospeso.</div></td></tr>`;
+  const cerrHTML  = cerr.map(mkRow).join('')  || `<tr><td colspan="4"><div class="empty">Nessun elemento chiuso.</div></td></tr>`;
+  $('#tblPend').innerHTML = pendHTML;
+  $('#tblCerr').innerHTML = cerrHTML;
+
+  // Mobile cards
+  $('#listPend').innerHTML = pend.map(mkCard).join('') || `<div class="empty">Nessun elemento in sospeso.</div>`;
+  $('#listCerr').innerHTML = cerr.map(mkCard).join('') || `<div class="empty">Nessun elemento chiuso.</div>`;
+
+  bindRowActions('#wrapPend');
+  bindRowActions('#wrapCerr');
+}
+
+function bindRowActions(containerSel){
+  const root = $(containerSel);
+  root.querySelectorAll('.act-copiar').forEach(btn=>{
+    btn.addEventListener('click', async ()=> {
+      const id = btn.closest('[data-id]').dataset.id;
+      try{ await navigator.clipboard.writeText(id); toast(`Copiato: ${id}`,'ok',1600);}catch{toast('Impossibile copiare','err');}
+    });
+  });
+  root.querySelectorAll('.act-entregado').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{ const id = btn.closest('[data-id]').dataset.id; await quickSet(id,'entregado'); });
+  });
+  root.querySelectorAll('.act-transito').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{ const id = btn.closest('[data-id]').dataset.id; await quickSet(id,'transito'); });
+  });
+  root.querySelectorAll('.act-tramite').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{ const id = btn.closest('[data-id]').dataset.id; await quickSet(id,'tramite'); });
+  });
+  root.querySelectorAll('.act-borrar').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const id = btn.closest('[data-id]').dataset.id;
+      if(!confirm(`Eliminare "${id}"?`)) return;
+      await apiDelete(id); toast(`"${id}" eliminato`,'ok'); loadAndRender();
+    });
+  });
+}
+
+/* =================== EVENTS & INIT =================== */
+let qTimer=null;
+async function loadAndRender(){
+  try{
+    const q = $('#q').value || '';
+    $('#countPill').innerHTML = `<span class="spinner" aria-hidden></span>`;
+    const rows = await apiList(q);
+    _rows = rows;
+    // Mostra/nascondi tabelle in base al filtro
+    if(!_filter){ $('#tablesArea').style.display='none'; $('#prompt').style.display='grid'; }
+    else { $('#tablesArea').style.display='flex'; $('#prompt').style.display='none'; renderTables(rows); }
+    if(_filter){ renderTables(rows); }
+  }catch(e){ toast('Errore nel caricamento dei dati','err'); }
+}
+
+// Salva / aggiorna
+$('#btnGuardar').addEventListener('click', async ()=>{
+  const id = norm($('#track').value); const st = $('#estado').value;
+  if(!id) return toast('Inserisci un numero valido','err');
+  try{ const o = await apiUpsert(id, st); toast('Salvato','ok'); $('#track').value=''; openModalFor(o); loadAndRender(); }
+  catch(e){ toast('Errore durante il salvataggio','err'); }
+});
+$('#btnEntregar').addEventListener('click', async ()=>{
+  const id = norm($('#track').value); if(!id) return toast('Inserisci un numero valido','err');
+  try{ const o = await apiSetStatus(id,'entregado'); toast('Segnato come Consegnato','ok'); openModalFor(o); loadAndRender(); }
+  catch(e){ toast('Errore durante l\'aggiornamento','err'); }
+});
+
+// Ricerca e refresh
+$('#btnRefrescar').addEventListener('click', loadAndRender);
+$('#btnBorrarTodo').addEventListener('click', async ()=>{
+  if(!confirm('Eliminare TUTTE le spedizioni?')) return;
+  try{ await apiDeleteAll(); toast('Tutto eliminato','ok'); loadAndRender(); }
+  catch(e){ toast('Impossibile eliminare tutto','err'); }
+});
+$('#q').addEventListener('input', ()=>{ clearTimeout(qTimer); qTimer=setTimeout(loadAndRender, 180); });
+
+// Filtri e ordinamento (senza opzione "Tutti")
+$$('.seg-btn').forEach(btn=>{
+  if(btn.dataset.filter===_filter) btn.setAttribute('aria-pressed','true');
+  btn.addEventListener('click', ()=>{
+    $$('.seg-btn').forEach(b=>b.setAttribute('aria-pressed','false'));
+    btn.setAttribute('aria-pressed','true');
+    _filter = btn.dataset.filter; localStorage.setItem('flt', _filter);
+    $('#tablesArea').style.display='flex'; $('#prompt').style.display='none';
+    renderTables(_rows);
+  });
+});
+$('#sort').value = _sort;
+$('#sort').addEventListener('change', ()=>{ _sort = $('#sort').value; localStorage.setItem('sort', _sort); if(_filter) renderTables(_rows); });
+
+// Chiave Admin persistente e toggle
+(function initKey(){
+  const saved = getKey();
+  if(saved){ $('#adminkey').value = saved; $('#keyPill').textContent = '🔐 Chiave salvata'; }
+  $('#adminkey').addEventListener('change', ()=> setKey($('#adminkey').value.trim()));
+  $('#toggleKey').addEventListener('click', ()=>{ const f = $('#adminkey'); f.type = (f.type==='password' ? 'text' : 'password'); });
+})();
+
+// Scorciatoie tastiera: / cerca, n nuovo, r aggiorna
+window.addEventListener('keydown', (e)=>{
+  if(e.key==='/' && document.activeElement!==$('#q')){ e.preventDefault(); $('#q').focus(); }
+  if(e.key==='n'){ $('#track').focus(); }
+  if(e.key==='r'){ loadAndRender(); }
+});
+
+// Mostra liste (cards) su mobile
+const mq = window.matchMedia('(max-width:640px)');
+function syncMobileLists(){
+  const isMobile = mq.matches;
+  $('#listPend').hidden = !isMobile; $('#listCerr').hidden = !isMobile;
+}
+mq.addEventListener('change', syncMobileLists); syncMobileLists();
+
+/* Prima carga */
+loadAndRender();
+
+// Helper rapido per cambiare stato con toast
+async function quickSet(id, stato){
+  try{
+    const o = await apiSetStatus(id, stato);
+    toast('Aggiornato','ok');
+    openModalFor(o);
+    loadAndRender();
+  }catch(e){ toast('Errore durante l\'aggiornamento','err'); }
+}
+</script>
+</body>
+</html>
